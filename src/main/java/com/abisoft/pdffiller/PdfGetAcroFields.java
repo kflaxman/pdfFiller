@@ -13,37 +13,36 @@ import com.itextpdf.text.pdf.AcroFields;
 import com.itextpdf.text.pdf.PdfReader;
 import com.google.gson.Gson;
 import java.util.HashMap;
+import com.google.gson.JsonObject;
 
 @WebServlet("/getFields")
 
 public class PdfGetAcroFields extends HttpServlet {
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException,
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
             IOException {
-        String pdfFile = "/export/wps/generatedLetters/summons.pdf";
+        String pdfFile = request.getParameter("fileName");
+        PrintWriter out = response.getWriter();
         PdfReader reader = new PdfReader(pdfFile);
         Gson gson = new Gson();
         AcroFields fields = reader.getAcroFields();
 
         // Create a Map to store the key-value pairs
         Map<String, String> dataMap = new HashMap<>();
-       // dataMap = fields.getFields();
-
-
         // Get the form fields in the PDF file
         Map<String,AcroFields.Item> fieldNames = fields.getFields();
-      //  List<String> fieldNames = fields.getFields();
-
-        // Print the field names to the console
-        String returnString = "";
+        JsonObject innerObj = new JsonObject();
         for (String fieldName : fieldNames.keySet()) {
-            returnString += (fieldName);
-            dataMap.put(fieldName, "");
+           // dataMap.put(fieldName, "");
+            innerObj.addProperty(fieldName, "");
         }
-        String json = gson.toJson(dataMap);
-        PrintWriter out = response.getWriter();
-        //turn this into an html form
-        out.println(json);
+        JsonObject outerObj = new JsonObject();
+        outerObj.addProperty("fileName", pdfFile);
+        outerObj.add("fields", innerObj);
+
+        //   String json = gson.toJson(dataMap);
+
+        out.println(gson.toJson(outerObj));
         out.close();
     }
 }
